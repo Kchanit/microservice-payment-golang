@@ -26,3 +26,7 @@ func (h *UserHandler) GetUser(ctx *fiber.Ctx) error {
 	}
 	return ctx.JSON(user)
 }
+
+func (h *UserHandler) Hello(ctx *fiber.Ctx) error {
+	return ctx.SendString("Hello World!")
+}

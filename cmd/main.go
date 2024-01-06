@@ -6,7 +6,7 @@ import (
 	"os"
 
 	handler "github.com/Kchanit/microservice-payment-golang/internal/adapter/handler/http"
-	repository "github.com/Kchanit/microservice-payment-golang/internal/adapter/repository/mysql"
+	repository "github.com/Kchanit/microservice-payment-golang/internal/adapter/repository/postgres"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/services"
 	"github.com/joho/godotenv"
 )
