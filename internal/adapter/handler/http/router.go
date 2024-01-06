@@ -11,8 +11,18 @@ type Router struct {
 func NewRouter(userHandler UserHandler) (*Router, error) {
 	router := fiber.New()
 
-	router.Get("/", userHandler.Hello)
-	router.Get("/users/:id", userHandler.GetUser)
+	router.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("Yo, World 👋!")
+	})
+
+	user := router.Group("/users")
+	{
+		user.Post("/", userHandler.CreateUser)
+		user.Get("/", userHandler.GetAllUsers)
+		user.Get("/:id", userHandler.GetUserByID)
+		user.Put("/:id", userHandler.UpdateUser)
+		user.Delete("/:id", userHandler.DeleteUser)
+	}
 
 	return &Router{
 		router,

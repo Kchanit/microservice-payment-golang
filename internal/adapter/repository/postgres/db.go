@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/Kchanit/microservice-payment-golang/internal/core/domain"
 	_ "github.com/lib/pq"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -31,6 +32,8 @@ func ConnectDb() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	db.AutoMigrate(&domain.User{})
 	DB = db
 	fmt.Println("Successfully connected!")
 }
