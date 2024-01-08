@@ -19,10 +19,12 @@ func main() {
 	userRepo := repository.NewUserRepository(repository.DB)
 	userService := services.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
+	omiseHandler := handler.NewOmiseHandler()
 
 	// Init router
 	router, err := handler.NewRouter(
 		*userHandler,
+		*omiseHandler,
 	)
 	if err != nil {
 		slog.Error("Error initializing router", "error", err)

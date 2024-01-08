@@ -67,12 +67,12 @@ func (h *UserHandler) CreateUser(c *fiber.Ctx) error {
 		})
 	}
 
-	user, err := h.userService.CreateUser(user)
+	user, result, err := h.userService.CreateUser(user)
 	if err != nil {
 		fmt.Println("Error while creating user", err)
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
-	return c.Status(fiber.StatusCreated).JSON(user)
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "User created successfully", "user": user, "result": result})
 }
 
 func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {

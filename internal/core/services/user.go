@@ -1,8 +1,13 @@
 package services
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/Kchanit/microservice-payment-golang/internal/core/domain"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/ports"
+	"github.com/omise/omise-go"
+	"github.com/omise/omise-go/operations"
 	"gorm.io/gorm"
 )
 
@@ -23,12 +28,31 @@ func (s *UserService) GetUserByID(id string) (*domain.User, error) {
 	return user, nil
 }
 
-func (s *UserService) CreateUser(user *domain.User) (*domain.User, error) {
-	user, err := s.repo.CreateUser(user)
+func (s *UserService) CreateUser(user *domain.User) (*domain.User, *omise.Customer, error) {
+	createdUser, err := s.repo.CreateUser(user)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return user, nil
+
+	client, _ := omise.NewClient(os.Getenv("OMISE_PUBLIC_KEY"), os.Getenv("OMISE_SECRET_KEY"))
+	customer := &omise.Customer{}
+	err = client.Do(customer, &operations.CreateCustomer{
+		Email:       user.Email,
+		Description: fmt.Sprintf("%s (id: %d)", user.Name, user.ID),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	updatedUser := &domain.User{
+		ID:             createdUser.ID,
+		Name:           createdUser.Name,
+		Email:          createdUser.Email,
+		CustomerToken:  customer.ID,
+	}
+
+	updatedUser, err = s.repo.UpdateUser(createdUser, updatedUser)
+	return updatedUser, customer, err
 }
 
 func (s *UserService) GetAllUsers() ([]*domain.User, error) {

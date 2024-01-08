@@ -8,7 +8,7 @@ type Router struct {
 	*fiber.App
 }
 
-func NewRouter(userHandler UserHandler) (*Router, error) {
+func NewRouter(userHandler UserHandler, omiseHandler OmiseHandler) (*Router, error) {
 	router := fiber.New()
 
 	router.Get("/", func(c *fiber.Ctx) error {
@@ -22,6 +22,13 @@ func NewRouter(userHandler UserHandler) (*Router, error) {
 		user.Get("/:id", userHandler.GetUserByID)
 		user.Put("/:id", userHandler.UpdateUser)
 		user.Delete("/:id", userHandler.DeleteUser)
+	}
+
+	omise := router.Group("/omise")
+	{
+		omise.Get("/charge/:token", omiseHandler.Charge)
+		omise.Post("/token", omiseHandler.CreateToken)
+		omise.Get("/customers", omiseHandler.ListCustomers)
 	}
 
 	return &Router{
