@@ -24,11 +24,18 @@ func NewOmiseHandler() *OmiseHandler {
 	return &OmiseHandler{}
 }
 
-func (h *OmiseHandler) Charge(c *fiber.Ctx) error {
+func NewOmiseClient() (*omise.Client, error) {
 	OmisePublicKey := os.Getenv("OMISE_PUBLIC_KEY")
 	OmiseSecretKey := os.Getenv("OMISE_SECRET_KEY")
-
 	client, e := omise.NewClient(OmisePublicKey, OmiseSecretKey)
+	if e != nil {
+		fmt.Println(e)
+	}
+	return client, e
+}
+
+func (h *OmiseHandler) Charge(c *fiber.Ctx) error {
+	client, e := NewOmiseClient()
 	if e != nil {
 		fmt.Println(e)
 	}
@@ -47,9 +54,7 @@ func (h *OmiseHandler) Charge(c *fiber.Ctx) error {
 }
 
 func (h *OmiseHandler) CreateToken(c *fiber.Ctx) error {
-	OmisePublicKey := os.Getenv("OMISE_PUBLIC_KEY")
-	OmiseSecretKey := os.Getenv("OMISE_SECRET_KEY")
-	client, e := omise.NewClient(OmisePublicKey, OmiseSecretKey)
+	client, e := NewOmiseClient()
 	if e != nil {
 		fmt.Println(e)
 	}
@@ -75,9 +80,7 @@ func (h *OmiseHandler) CreateToken(c *fiber.Ctx) error {
 }
 
 func (h *OmiseHandler) ListCustomers(c *fiber.Ctx) error {
-	OmisePublicKey := os.Getenv("OMISE_PUBLIC_KEY")
-	OmiseSecretKey := os.Getenv("OMISE_SECRET_KEY")
-	client, e := omise.NewClient(OmisePublicKey, OmiseSecretKey)
+	client, e := NewOmiseClient()
 	if e != nil {
 		fmt.Println(e)
 	}
