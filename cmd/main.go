@@ -19,7 +19,9 @@ func main() {
 	userRepo := repository.NewUserRepository(repository.DB)
 	userService := services.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
-	omiseHandler := handler.NewOmiseHandler()
+
+	omiseService := services.NewOmiseService()
+	omiseHandler := handler.NewOmiseHandler(omiseService)
 
 	// Init router
 	router, err := handler.NewRouter(

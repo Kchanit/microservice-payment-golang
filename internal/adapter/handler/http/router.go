@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 type Router struct {
@@ -10,6 +11,12 @@ type Router struct {
 
 func NewRouter(userHandler UserHandler, omiseHandler OmiseHandler) (*Router, error) {
 	router := fiber.New()
+
+	router.Use(cors.New(
+		cors.Config{
+			AllowOrigins:     "*",
+			AllowCredentials: true,
+		}))
 
 	router.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Yo, World 👋!")
@@ -26,9 +33,14 @@ func NewRouter(userHandler UserHandler, omiseHandler OmiseHandler) (*Router, err
 
 	omise := router.Group("/omise")
 	{
-		omise.Get("/charge/:token", omiseHandler.Charge)
+		omise.Get("/charge-credit-card/:amount/:token", omiseHandler.ChargeCreditCard)
+		omise.Get("/charge-banking/:amount/:source", omiseHandler.ChargeBanking)
+		omise.Get("/retrieve-charge/:charge_id", omiseHandler.RetrieveCharge)
 		omise.Post("/token", omiseHandler.CreateToken)
 		omise.Get("/customers", omiseHandler.ListCustomers)
+		omise.Put("/attach-card", omiseHandler.AttchCardToCustomer)
+		omise.Post("/webhook", omiseHandler.HandleWebhook)
+		omise.Get("/charges", omiseHandler.GetCharges)
 	}
 
 	return &Router{
