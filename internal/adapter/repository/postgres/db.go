@@ -21,14 +21,15 @@ func ConnectDb() {
 	DBPORT := os.Getenv("DB_PORT")
 
 	fmt.Println("Connecting to database...")
-	
+
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", HOST, USER, PASS, DBNAME, DBPORT)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	db.AutoMigrate(&domain.User{})
+	db.AutoMigrate(&domain.User{}, &domain.Transaction{}, &domain.CardToken{})
+
 	DB = db
 	fmt.Println("Successfully connected!")
 }

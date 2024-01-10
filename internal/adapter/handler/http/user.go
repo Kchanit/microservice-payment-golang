@@ -49,6 +49,17 @@ func (h *UserHandler) GetUserByID(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(user)
 }
 
+func (h *UserHandler) GetUserByEmail(c *fiber.Ctx) error {
+	email := c.Params("email")
+	user, err := h.userService.GetUserByEmail(email)
+	if err != nil {
+		fmt.Println("Error while getting user", err)
+		return c.Status(fiber.StatusBadRequest).SendString("User not found")
+	}
+
+	return c.Status(fiber.StatusOK).JSON(user)
+}
+
 // CreateUser creates a new user
 func (h *UserHandler) CreateUser(c *fiber.Ctx) error {
 	user := new(domain.User)
@@ -107,7 +118,7 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 	user.Email = userInput.Email
 
 	// Update user
-	updatedUser, err := h.userService.UpdateUser(user, id)
+	updatedUser, err := h.userService.UpdateUser(id, user)
 	if err != nil {
 		fmt.Println("Error while updating user", err)
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())

@@ -7,10 +7,11 @@ import (
 )
 
 type OmiseService interface {
-	ChargeBanking(amount string, source string) (*omise.Charge, error)
-	ChargeCreditCard(amount string, token string) (*omise.Charge, error)
+	ChargeBanking(amount int64, source string, userID string) (*omise.Charge, error)
+	ChargeCreditCard(amount int64, token string, userID string) (*omise.Charge, error)
 	CreateToken(name string, number string, expirationMonth time.Month, expirationYear int) (*omise.Card, error)
 	ListCustomers() (*omise.CustomerList, error)
+	GetCustomer(customerID string) (*omise.Customer, error)
 	AttachCardToCustomer(customerID string, card string) (*omise.Customer, error)
 	RetrieveCharge(chargeID string) (*omise.Charge, error)
 	GetCharges() (*omise.ChargeList, error)

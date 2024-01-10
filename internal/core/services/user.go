@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/Kchanit/microservice-payment-golang/internal/core/domain"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/ports"
@@ -28,7 +29,22 @@ func (s *UserService) GetUserByID(id string) (*domain.User, error) {
 	return user, nil
 }
 
+func (s *UserService) GetUserByEmail(email string) (*domain.User, error) {
+	var user *domain.User
+	user, err := s.repo.GetUserByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 func (s *UserService) CreateUser(user *domain.User) (*domain.User, *omise.Customer, error) {
+	// Check if the user exists
+	existingUser, err := s.repo.GetUserByEmail(user.Email)
+	if existingUser != nil {
+		return nil, nil, fmt.Errorf("User with email %s already exists", user.Email)
+	}
+
 	createdUser, err := s.repo.CreateUser(user)
 	if err != nil {
 		return nil, nil, err
@@ -45,13 +61,13 @@ func (s *UserService) CreateUser(user *domain.User) (*domain.User, *omise.Custom
 	}
 
 	updatedUser := &domain.User{
-		ID:             createdUser.ID,
-		Name:           createdUser.Name,
-		Email:          createdUser.Email,
-		CustomerToken:  customer.ID,
+		ID:            createdUser.ID,
+		Name:          createdUser.Name,
+		Email:         createdUser.Email,
+		CustomerToken: customer.ID,
 	}
 
-	updatedUser, err = s.repo.UpdateUser(createdUser, updatedUser)
+	updatedUser, err = s.repo.UpdateUser(strconv.Itoa(int(user.ID)), updatedUser)
 	return updatedUser, customer, err
 }
 
@@ -63,7 +79,7 @@ func (s *UserService) GetAllUsers() ([]*domain.User, error) {
 	return users, nil
 }
 
-func (s *UserService) UpdateUser(user *domain.User, id string) (*domain.User, error) {
+func (s *UserService) UpdateUser(id string, user *domain.User) (*domain.User, error) {
 	existingUser, err := s.repo.GetUserByID(id)
 	if err != nil {
 		return nil, err
@@ -74,7 +90,7 @@ func (s *UserService) UpdateUser(user *domain.User, id string) (*domain.User, er
 		return nil, gorm.ErrRecordNotFound
 	}
 
-	updatedUser, err := s.repo.UpdateUser(existingUser, user)
+	updatedUser, err := s.repo.UpdateUser(id, user)
 	if err != nil {
 		return nil, err
 	}

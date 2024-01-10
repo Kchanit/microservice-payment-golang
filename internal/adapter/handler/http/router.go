@@ -9,7 +9,7 @@ type Router struct {
 	*fiber.App
 }
 
-func NewRouter(userHandler UserHandler, omiseHandler OmiseHandler) (*Router, error) {
+func NewRouter(userHandler UserHandler, omiseHandler OmiseHandler, transactionHandler TransactionHandler) (*Router, error) {
 	router := fiber.New()
 
 	router.Use(cors.New(
@@ -31,13 +31,16 @@ func NewRouter(userHandler UserHandler, omiseHandler OmiseHandler) (*Router, err
 		user.Delete("/:id", userHandler.DeleteUser)
 	}
 
+	router.Get("/transactions", transactionHandler.GetAllTransactions)
+
 	omise := router.Group("/omise")
 	{
-		omise.Get("/charge-credit-card/:amount/:token", omiseHandler.ChargeCreditCard)
-		omise.Get("/charge-banking/:amount/:source", omiseHandler.ChargeBanking)
+		omise.Post("/charge-credit-card/:userID", omiseHandler.ChargeCreditCard)
+		omise.Post("/charge-banking/:userID", omiseHandler.ChargeBanking)
 		omise.Get("/retrieve-charge/:charge_id", omiseHandler.RetrieveCharge)
 		omise.Post("/token", omiseHandler.CreateToken)
 		omise.Get("/customers", omiseHandler.ListCustomers)
+		omise.Get("/customers/:customerToken", omiseHandler.GetCustomer)
 		omise.Put("/attach-card", omiseHandler.AttchCardToCustomer)
 		omise.Post("/webhook", omiseHandler.HandleWebhook)
 		omise.Get("/charges", omiseHandler.GetCharges)

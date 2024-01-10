@@ -10,11 +10,13 @@ import (
 
 type OmiseHandler struct {
 	omiseService ports.OmiseService
+	userService  ports.UserService
 }
 
-func NewOmiseHandler(omiseService ports.OmiseService) *OmiseHandler {
+func NewOmiseHandler(omiseService ports.OmiseService, userService ports.UserService) *OmiseHandler {
 	return &OmiseHandler{
 		omiseService: omiseService,
+		userService:  userService,
 	}
 }
 
@@ -25,11 +27,21 @@ type Token struct {
 	ExpirationYear  int        `json:"expiration_year"`
 }
 
-func (h *OmiseHandler) ChargeCreditCard(c *fiber.Ctx) error {
-	token := c.Params("token")
-	amount := c.Params("amount")
+type ChargeCreditCardInput struct {
+	Token  string `json:"token"`
+	Amount int64  `json:"amount"`
+}
 
-	charge, e := h.omiseService.ChargeCreditCard(amount, token)
+func (h *OmiseHandler) ChargeCreditCard(c *fiber.Ctx) error {
+	chargeInput := &ChargeCreditCardInput{}
+	if err := c.BodyParser(chargeInput); err != nil {
+		fmt.Println(err)
+	}
+	amount := chargeInput.Amount
+	token := chargeInput.Token
+	userID := c.Params("userID")
+
+	charge, e := h.omiseService.ChargeCreditCard(amount, token, userID)
 	if e != nil {
 		return c.Status(500).SendString(e.Error())
 	}
@@ -38,14 +50,24 @@ func (h *OmiseHandler) ChargeCreditCard(c *fiber.Ctx) error {
 		fmt.Println(charge.FailureCode, charge.FailureMessage)
 		return c.Status(500).JSON(fiber.Map{"failure_code": charge.FailureCode, "message": charge.FailureMessage})
 	}
-	return c.JSON(fiber.Map{"Charge ID": charge.ID, "Amount": charge.Amount, "Currency": charge.Currency, "Status": charge.Status, "Charge": charge})
+	return c.JSON(fiber.Map{"Charge ID": charge.ID, "Amount": charge.Amount, "Status": charge.Status, "Charge": charge})
+}
+
+type ChargeBankingInput struct {
+	Source string `json:"source"`
+	Amount int64  `json:"amount"`
 }
 
 func (h *OmiseHandler) ChargeBanking(c *fiber.Ctx) error {
-	source := c.Params("source")
-	amount := c.Params("amount")
+	chargeInput := &ChargeBankingInput{}
+	if err := c.BodyParser(chargeInput); err != nil {
+		fmt.Println(err)
+	}
+	amount := chargeInput.Amount
+	source := chargeInput.Source
+	userID := c.Params("userID")
 
-	charge, err := h.omiseService.ChargeBanking(amount, source)
+	charge, err := h.omiseService.ChargeBanking(amount, source, userID)
 	if err != nil {
 		return c.Status(500).SendString(err.Error())
 	}
@@ -80,6 +102,8 @@ func (h *OmiseHandler) ListCustomers(c *fiber.Ctx) error {
 		fmt.Println(err)
 		return c.Status(500).SendString(err.Error())
 	}
+
+	fmt.Println(result)
 	return c.JSON(result)
 }
 
@@ -134,6 +158,16 @@ func (h *OmiseHandler) GetCharges(c *fiber.Ctx) error {
 func (h *OmiseHandler) GetTransaction(c *fiber.Ctx) error {
 	transactionID := c.Params("transaction_id")
 	result, err := h.omiseService.GetTransaction(transactionID)
+	if err != nil {
+		fmt.Println(err)
+		return c.Status(500).SendString(err.Error())
+	}
+	return c.JSON(result)
+}
+
+func (h *OmiseHandler) GetCustomer(c *fiber.Ctx) error {
+	customerID := c.Params("customerToken")
+	result, err := h.omiseService.GetCustomer(customerID)
 	if err != nil {
 		fmt.Println(err)
 		return c.Status(500).SendString(err.Error())

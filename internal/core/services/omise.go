@@ -7,14 +7,22 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Kchanit/microservice-payment-golang/internal/core/domain"
+	"github.com/Kchanit/microservice-payment-golang/internal/core/ports"
 	"github.com/omise/omise-go"
 	"github.com/omise/omise-go/operations"
 )
 
-type OmiseService struct{}
+type OmiseService struct {
+	userRepo        ports.UserRepository
+	transactionRepo ports.TransactionRepository
+}
 
-func NewOmiseService() *OmiseService {
-	return &OmiseService{}
+func NewOmiseService(userRepo ports.UserRepository, transactionRepo ports.TransactionRepository) *OmiseService {
+	return &OmiseService{
+		userRepo:        userRepo,
+		transactionRepo: transactionRepo,
+	}
 }
 
 func NewOmiseClient() (*omise.Client, error) {
@@ -28,17 +36,14 @@ func NewOmiseClient() (*omise.Client, error) {
 }
 
 // ChargeCreditCard charges a credit card with the given amount and token.
-func (s *OmiseService) ChargeCreditCard(amount string, token string) (*omise.Charge, error) {
+func (s *OmiseService) ChargeCreditCard(amount int64, token string, userID string) (*omise.Charge, error) {
 	client, e := NewOmiseClient()
 	if e != nil {
 		return nil, e
 	}
 
-	// Parse amount to int
-	amountInt, _ := strconv.Atoi(amount)
-
 	charge, createCharge := &omise.Charge{}, &operations.CreateCharge{
-		Amount:   int64(amountInt),
+		Amount:   amount,
 		Currency: "thb",
 		Card:     token,
 	}
@@ -46,22 +51,45 @@ func (s *OmiseService) ChargeCreditCard(amount string, token string) (*omise.Cha
 	if e := client.Do(charge, createCharge); e != nil {
 		return nil, e
 	}
+	existingUser, err := s.userRepo.GetUserByID(userID)
+	if err != nil {
+		return nil, err
+	}
+	id, err := strconv.Atoi(userID)
+	if err != nil {
+		return nil, err
+	}
+	newTransaction := domain.Transaction{
+		ID:       charge.ID,
+		Amount:   charge.Amount,
+		Currency: charge.Currency,
+		Created:  time.Now(),
+		UserID:   uint(id),
+	}
 
+	transaction, err := s.transactionRepo.CreateTransaction(&newTransaction)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(transaction)
+	existingUser.Transactions = append(existingUser.Transactions, *transaction)
+
+	_, err = s.userRepo.UpdateUser(userID, existingUser)
+	if err != nil {
+		return nil, err
+	}
 	return charge, nil
 }
 
 // ChargeBanking charges a specified amount from a banking source.
-func (s *OmiseService) ChargeBanking(amount string, source string) (*omise.Charge, error) {
+func (s *OmiseService) ChargeBanking(amount int64, source string, userID string) (*omise.Charge, error) {
 	client, e := NewOmiseClient()
 	if e != nil {
 		return nil, e
 	}
 
-	// Parse amount to int
-	amountInt, _ := strconv.Atoi(amount)
-
 	charge, createCharge := &omise.Charge{}, &operations.CreateCharge{
-		Amount:    int64(amountInt),
+		Amount:    amount,
 		Currency:  "thb",
 		Source:    source,
 		ReturnURI: "https://example.com/orders/345678/complete",
@@ -70,7 +98,14 @@ func (s *OmiseService) ChargeBanking(amount string, source string) (*omise.Charg
 	if e := client.Do(charge, createCharge); e != nil {
 		return nil, e
 	}
+	user, err := s.userRepo.GetUserByID(userID)
+	if err != nil {
+		return nil, err
+	}
 
+	// user.Transactions = append(user.Transactions, charge.Transaction)
+
+	s.userRepo.UpdateUser(userID, user)
 	return charge, nil
 }
 
@@ -184,4 +219,24 @@ func (s *OmiseService) GetTransaction(transactionID string) (*omise.Transaction,
 	}
 	log.Println(result)
 	return result, nil
+}
+
+// GetCustomer get a customer
+func (s *OmiseService) GetCustomer(customerID string) (*omise.Customer, error) {
+	client, e := NewOmiseClient()
+	if e != nil {
+		return nil, e
+	}
+
+	customer := &omise.Customer{}
+
+	err := client.Do(customer, &operations.RetrieveCustomer{
+		CustomerID: customerID,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return customer, nil
 }

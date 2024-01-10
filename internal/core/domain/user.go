@@ -1,20 +1,16 @@
 package domain
 
-import "time"
-
-type UserRole string
-
-const (
-	Admin    UserRole = "admin"
-	Customer UserRole = "customer"
+import (
+	"time"
 )
 
 type User struct {
-	ID            uint   `gorm:"primaryKey" json:"id"`
-	Name          string `json:"name" validate:"required,min=3"`
-	Email         string `json:"email" validate:"required,email"`
-	CustomerToken string `json:"customer_token"`
-	// Role      UserRole  `json:"role"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID            uint          `gorm:"primaryKey" json:"id"`
+	Name          string        `gorm:"not null,unique" json:"name" validate:"required,min=3"`
+	Email         string        `gorm:"not null,unique" json:"email" validate:"required,email"`
+	CustomerToken string        `gorm:"unique " json:"customer_token"`
+	CardTokens    []CardToken   `gorm:"many2many:user_card_tokens" json:"card_tokens"`
+	Transactions  []Transaction `gorm:"foreignKey:UserID" json:"transactions"`
+	CreatedAt     time.Time     `json:"created_at"`
+	UpdatedAt     time.Time     `json:"updated_at"`
 }
