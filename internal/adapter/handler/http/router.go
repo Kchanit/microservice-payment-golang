@@ -41,6 +41,7 @@ func NewRouter(userHandler UserHandler, omiseHandler OmiseHandler) (*Router, err
 		omise.Put("/attach-card", omiseHandler.AttchCardToCustomer)
 		omise.Post("/webhook", omiseHandler.HandleWebhook)
 		omise.Get("/charges", omiseHandler.GetCharges)
+		omise.Get("/transactions/:transaction_id", omiseHandler.GetTransaction)
 	}
 
 	return &Router{

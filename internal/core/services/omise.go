@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"time"
@@ -163,4 +164,24 @@ func (s *OmiseService) GetCharges() (*omise.ChargeList, error) {
 	}
 	return result, nil
 
+}
+
+// GetTransaction get a transaction
+func (s *OmiseService) GetTransaction(transactionID string) (*omise.Transaction, error) {
+	client, e := NewOmiseClient()
+	if e != nil {
+		return nil, e
+	}
+
+	result := &omise.Transaction{}
+
+	err := client.Do(result, &operations.RetrieveTransaction{
+		TransactionID: transactionID,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	log.Println(result)
+	return result, nil
 }

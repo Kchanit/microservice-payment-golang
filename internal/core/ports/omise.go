@@ -14,4 +14,5 @@ type OmiseService interface {
 	AttachCardToCustomer(customerID string, card string) (*omise.Customer, error)
 	RetrieveCharge(chargeID string) (*omise.Charge, error)
 	GetCharges() (*omise.ChargeList, error)
+	GetTransaction(transactionID string) (*omise.Transaction, error)
 }

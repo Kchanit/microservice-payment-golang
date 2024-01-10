@@ -130,3 +130,13 @@ func (h *OmiseHandler) GetCharges(c *fiber.Ctx) error {
 	}
 	return c.JSON(result)
 }
+
+func (h *OmiseHandler) GetTransaction(c *fiber.Ctx) error {
+	transactionID := c.Params("transaction_id")
+	result, err := h.omiseService.GetTransaction(transactionID)
+	if err != nil {
+		fmt.Println(err)
+		return c.Status(500).SendString(err.Error())
+	}
+	return c.JSON(result)
+}
