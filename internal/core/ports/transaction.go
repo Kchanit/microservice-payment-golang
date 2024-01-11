@@ -10,4 +10,6 @@ type TransactionRepository interface {
 
 type TransactionService interface {
 	GetAllTransactions() ([]*domain.Transaction, error)
+	AddTransactionToUser(userID string, transaction domain.Transaction) (*domain.User, error)
+	CreateTransaction(transaction *domain.Transaction) (*domain.Transaction, error)
 }

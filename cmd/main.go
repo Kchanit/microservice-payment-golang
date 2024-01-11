@@ -21,11 +21,11 @@ func main() {
 	userHandler := handler.NewUserHandler(userService)
 
 	transactionRepo := repository.NewTransactionRepository(repository.DB)
-	transactionService := services.NewTransactionService(transactionRepo)
+	transactionService := services.NewTransactionService(transactionRepo, userRepo)
 	transactionHandler := handler.NewTransactionHandler(transactionService)
 
 	omiseService := services.NewOmiseService(userRepo, transactionRepo)
-	omiseHandler := handler.NewOmiseHandler(omiseService, userService)
+	omiseHandler := handler.NewOmiseHandler(omiseService, userService, transactionService)
 
 	// Init router
 	router, err := handler.NewRouter(

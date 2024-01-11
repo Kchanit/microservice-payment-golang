@@ -1,22 +1,27 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
+	"github.com/Kchanit/microservice-payment-golang/internal/core/domain"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/ports"
 	"github.com/gofiber/fiber/v2"
 )
 
 type OmiseHandler struct {
-	omiseService ports.OmiseService
-	userService  ports.UserService
+	omiseService       ports.OmiseService
+	userService        ports.UserService
+	transactionService ports.TransactionService
 }
 
-func NewOmiseHandler(omiseService ports.OmiseService, userService ports.UserService) *OmiseHandler {
+func NewOmiseHandler(omiseService ports.OmiseService, userService ports.UserService, transactionService ports.TransactionService) *OmiseHandler {
 	return &OmiseHandler{
-		omiseService: omiseService,
-		userService:  userService,
+		omiseService:       omiseService,
+		userService:        userService,
+		transactionService: transactionService,
 	}
 }
 
@@ -112,7 +117,7 @@ type AttachCardRequest struct {
 	Card       string `json:"card"`
 }
 
-func (h *OmiseHandler) AttchCardToCustomer(c *fiber.Ctx) error {
+func (h *OmiseHandler) AttachCardToCustomer(c *fiber.Ctx) error {
 	req := &AttachCardRequest{}
 	if err := c.BodyParser(req); err != nil {
 		fmt.Println(err)
@@ -142,8 +147,69 @@ func (h *OmiseHandler) RetrieveCharge(c *fiber.Ctx) error {
 }
 
 func (h *OmiseHandler) HandleWebhook(c *fiber.Ctx) error {
+	data := c.Body()
+	if data == nil {
+		return c.SendStatus(500)
+	}
 
-	return c.SendStatus(int(c.Body()[0]))
+	// Parse the JSON payload into a map
+	var payload map[string]interface{}
+	if err := json.Unmarshal(c.Body(), &payload); err != nil {
+		fmt.Println("Error parsing JSON:", err)
+		return c.SendStatus(500)
+	}
+
+	// Retrieve the status and user ID from the payload
+	status, ok := payload["status"].(string)
+	if !ok {
+		fmt.Println("Error retrieving status from payload")
+		return c.SendStatus(500)
+	}
+	userID, ok := payload["metadata"].(map[string]interface{})["user_id"].(string)
+	if !ok {
+		fmt.Println("Error retrieving user ID from payload")
+		return c.SendStatus(500)
+	}
+
+	// If status is successful, create the transaction and add it to the user
+	if status == "successful" {
+		// Convert the user ID to uint
+		userIDUint, err := strconv.ParseUint(userID, 10, 32)
+		if err != nil {
+			fmt.Println(err)
+			return c.SendStatus(500)
+		}
+
+		// Covert amount to int64
+		amount, ok := payload["amount"].(float64)
+		if !ok {
+			fmt.Println("Error retrieving amount from payload")
+			return c.SendStatus(500)
+		}
+
+		// Create a new transaction object
+		newTransaction := &domain.Transaction{
+			ID:       payload["transaction"].(string),
+			UserID:   uint(userIDUint),
+			Amount:   int64(amount),
+			Currency: payload["currency"].(string),
+		}
+		fmt.Println("TransactionID: ", newTransaction.ID)
+		transaction, err := h.transactionService.CreateTransaction(newTransaction)
+		if err != nil {
+			fmt.Println(err)
+			return c.SendStatus(500)
+		}
+
+		// Add the transaction to the user
+		user, err := h.transactionService.AddTransactionToUser(userID, *transaction)
+		if err != nil {
+			fmt.Println(err)
+			return c.SendStatus(500)
+		}
+		c.JSON(user)
+	}
+	return c.SendStatus(200)
 }
 
 func (h *OmiseHandler) GetCharges(c *fiber.Ctx) error {

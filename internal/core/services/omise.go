@@ -60,7 +60,7 @@ func (s *OmiseService) ChargeCreditCard(amount int64, token string, userID strin
 		return nil, err
 	}
 	newTransaction := domain.Transaction{
-		ID:       charge.ID,
+		ID:       charge.Transaction,
 		Amount:   charge.Amount,
 		Currency: charge.Currency,
 		Created:  time.Now(),
@@ -93,6 +93,7 @@ func (s *OmiseService) ChargeBanking(amount int64, source string, userID string)
 		Currency:  "thb",
 		Source:    source,
 		ReturnURI: "https://example.com/orders/345678/complete",
+		Metadata:  map[string]interface{}{"user_id": userID},
 	}
 
 	if e := client.Do(charge, createCharge); e != nil {
@@ -107,6 +108,19 @@ func (s *OmiseService) ChargeBanking(amount int64, source string, userID string)
 
 	s.userRepo.UpdateUser(userID, user)
 	return charge, nil
+}
+
+func (s *OmiseService) AddTransactionToUser(userID string, transaction domain.Transaction) error {
+	user, err := s.userRepo.GetUserByID(userID)
+	if err != nil {
+		return err
+	}
+	user.Transactions = append(user.Transactions, transaction)
+	_, err = s.userRepo.UpdateUser(userID, user)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // CreateToken creates a token

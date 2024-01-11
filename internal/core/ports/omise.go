@@ -3,6 +3,7 @@ package ports
 import (
 	"time"
 
+	"github.com/Kchanit/microservice-payment-golang/internal/core/domain"
 	"github.com/omise/omise-go"
 )
 
@@ -16,4 +17,5 @@ type OmiseService interface {
 	RetrieveCharge(chargeID string) (*omise.Charge, error)
 	GetCharges() (*omise.ChargeList, error)
 	GetTransaction(transactionID string) (*omise.Transaction, error)
+	AddTransactionToUser(userID string, transaction domain.Transaction) error
 }
