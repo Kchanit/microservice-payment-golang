@@ -2,11 +2,12 @@ package services
 
 import (
 	"fmt"
-	"os"
+
 	"strconv"
 
 	"github.com/Kchanit/microservice-payment-golang/internal/core/domain"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/ports"
+	"github.com/Kchanit/microservice-payment-golang/internal/core/utils"
 	"github.com/omise/omise-go"
 	"github.com/omise/omise-go/operations"
 	"gorm.io/gorm"
@@ -50,7 +51,8 @@ func (s *UserService) CreateUser(user *domain.User) (*domain.User, *omise.Custom
 		return nil, nil, err
 	}
 
-	client, _ := omise.NewClient(os.Getenv("OMISE_PUBLIC_KEY"), os.Getenv("OMISE_SECRET_KEY"))
+	facade := utils.FacadeSingleton()
+	client := facade.Omise
 	customer := &omise.Customer{}
 	err = client.Do(customer, &operations.CreateCustomer{
 		Email:       user.Email,
