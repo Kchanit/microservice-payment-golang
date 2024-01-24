@@ -3,7 +3,6 @@ package repository
 import (
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/Kchanit/microservice-payment-golang/internal/core/domain"
 	_ "github.com/lib/pq"
@@ -13,13 +12,13 @@ import (
 
 var DB *gorm.DB
 
-func ConnectDb() {
-	USER := os.Getenv("DB_USER")
-	PASS := os.Getenv("DB_PASSWORD")
-	HOST := os.Getenv("DB_HOST")
-	DBNAME := os.Getenv("DB_NAME")
-	DBPORT := os.Getenv("DB_PORT")
-
+func ConnectDb(user, pass, host, dbname, port string) {
+	USER := user
+	PASS := pass
+	HOST := host
+	DBNAME := dbname
+	DBPORT := port
+	fmt.Println(DBPORT)
 	fmt.Println("Connecting to database...")
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", HOST, USER, PASS, DBNAME, DBPORT)
