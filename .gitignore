@@ -15,3 +15,5 @@ tmp/
 *.log
 *.out
 *.test
+
+test.html
