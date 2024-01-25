@@ -193,6 +193,7 @@ func (h *OmiseHandler) HandleWebhook(c *fiber.Ctx) error {
 			UserID:   uint(userIDUint),
 			Amount:   int64(amount),
 			Currency: payload["currency"].(string),
+			Status:   payload["status"].(string),
 		}
 		fmt.Println("TransactionID: ", newTransaction.ID)
 		transaction, err := h.transactionService.CreateTransaction(newTransaction)

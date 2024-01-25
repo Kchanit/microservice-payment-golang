@@ -26,6 +26,15 @@ func (s *TransactionService) GetAllTransactions() ([]*domain.Transaction, error)
 	return transactions, nil
 }
 
+func (s *TransactionService) GetTransaction(transactionID string) (*domain.Transaction, error) {
+	transaction, err := s.transactionRepo.GetTransactionByID(transactionID)
+	if err != nil {
+		return nil, err
+	}
+
+	return transaction, nil
+}
+
 func (s *TransactionService) CreateTransaction(transaction *domain.Transaction) (*domain.Transaction, error) {
 	transaction, err := s.transactionRepo.CreateTransaction(transaction)
 	if err != nil {

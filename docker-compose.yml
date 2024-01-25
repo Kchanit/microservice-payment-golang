@@ -37,16 +37,5 @@ services:
     volumes:
       - .:/app
 
-  localtunnel:
-    image: efrecon/localtunnel
-    command: lt --port 8080 --subdomain ${LOCALTUNNEL_SUBDOMAIN}
-    environment:
-      - LOCALTUNNEL_SUBDOMAIN=${LOCALTUNNEL_SUBDOMAIN}
-    ports:
-      - "80:80"
-    depends_on:
-      - web
-    restart: unless-stopped
-
 volumes:
   postgres_data:
