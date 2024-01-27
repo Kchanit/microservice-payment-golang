@@ -2,11 +2,12 @@ package services
 
 import (
 	"fmt"
-	"os"
+
 	"strconv"
 
 	"github.com/Kchanit/microservice-payment-golang/internal/core/domain"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/ports"
+	"github.com/Kchanit/microservice-payment-golang/internal/core/utils"
 	"github.com/omise/omise-go"
 	"github.com/omise/omise-go/operations"
 	"gorm.io/gorm"
@@ -40,7 +41,7 @@ func (s *UserService) GetUserByEmail(email string) (*domain.User, error) {
 
 func (s *UserService) CreateUser(user *domain.User) (*domain.User, *omise.Customer, error) {
 	// Check if the user exists
-	existingUser, err := s.repo.GetUserByEmail(user.Email)
+	existingUser, _ := s.repo.GetUserByEmail(user.Email)
 	if existingUser != nil {
 		return nil, nil, fmt.Errorf("User with email %s already exists", user.Email)
 	}
@@ -50,7 +51,8 @@ func (s *UserService) CreateUser(user *domain.User) (*domain.User, *omise.Custom
 		return nil, nil, err
 	}
 
-	client, _ := omise.NewClient(os.Getenv("OMISE_PUBLIC_KEY"), os.Getenv("OMISE_SECRET_KEY"))
+	facade := utils.FacadeSingleton()
+	client := facade.Omise
 	customer := &omise.Customer{}
 	err = client.Do(customer, &operations.CreateCustomer{
 		Email:       user.Email,

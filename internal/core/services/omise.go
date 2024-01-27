@@ -3,12 +3,12 @@ package services
 import (
 	"fmt"
 	"log"
-	"os"
 	"strconv"
 	"time"
 
 	"github.com/Kchanit/microservice-payment-golang/internal/core/domain"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/ports"
+	"github.com/Kchanit/microservice-payment-golang/internal/core/utils"
 	"github.com/omise/omise-go"
 	"github.com/omise/omise-go/operations"
 )
@@ -25,22 +25,10 @@ func NewOmiseService(userRepo ports.UserRepository, transactionRepo ports.Transa
 	}
 }
 
-func NewOmiseClient() (*omise.Client, error) {
-	OmisePublicKey := os.Getenv("OMISE_PUBLIC_KEY")
-	OmiseSecretKey := os.Getenv("OMISE_SECRET_KEY")
-	client, e := omise.NewClient(OmisePublicKey, OmiseSecretKey)
-	if e != nil {
-		fmt.Println(e)
-	}
-	return client, e
-}
-
 // ChargeCreditCard charges a credit card with the given amount and token.
 func (s *OmiseService) ChargeCreditCard(amount int64, token string, userID string) (*omise.Charge, error) {
-	client, e := NewOmiseClient()
-	if e != nil {
-		return nil, e
-	}
+	facade := utils.FacadeSingleton()
+	client := facade.Omise
 
 	charge, createCharge := &omise.Charge{}, &operations.CreateCharge{
 		Amount:   amount,
@@ -83,10 +71,8 @@ func (s *OmiseService) ChargeCreditCard(amount int64, token string, userID strin
 
 // ChargeBanking charges a specified amount from a banking source.
 func (s *OmiseService) ChargeBanking(amount int64, source string, userID string) (*omise.Charge, error) {
-	client, e := NewOmiseClient()
-	if e != nil {
-		return nil, e
-	}
+	facade := utils.FacadeSingleton()
+	client := facade.Omise
 
 	charge, createCharge := &omise.Charge{}, &operations.CreateCharge{
 		Amount:    amount,
@@ -104,9 +90,11 @@ func (s *OmiseService) ChargeBanking(amount int64, source string, userID string)
 		return nil, err
 	}
 
-	// user.Transactions = append(user.Transactions, charge.Transaction)
-
-	s.userRepo.UpdateUser(userID, user)
+	_, err = s.userRepo.UpdateUser(userID, user)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
 	return charge, nil
 }
 
@@ -125,10 +113,8 @@ func (s *OmiseService) AddTransactionToUser(userID string, transaction domain.Tr
 
 // CreateToken creates a token
 func (s *OmiseService) CreateToken(name string, number string, expirationMonth time.Month, expirationYear int) (*omise.Card, error) {
-	client, e := NewOmiseClient()
-	if e != nil {
-		return nil, e
-	}
+	facade := utils.FacadeSingleton()
+	client := facade.Omise
 
 	result := &omise.Card{}
 	err := client.Do(result, &operations.CreateToken{
@@ -146,10 +132,8 @@ func (s *OmiseService) CreateToken(name string, number string, expirationMonth t
 
 // ListCustomers lists all customers
 func (s *OmiseService) ListCustomers() (*omise.CustomerList, error) {
-	client, e := NewOmiseClient()
-	if e != nil {
-		return nil, e
-	}
+	facade := utils.FacadeSingleton()
+	client := facade.Omise
 
 	result := &omise.CustomerList{}
 
@@ -162,10 +146,8 @@ func (s *OmiseService) ListCustomers() (*omise.CustomerList, error) {
 
 // AttachCardToCustomer attaches a card to a customer
 func (s *OmiseService) AttachCardToCustomer(customerID string, card string) (*omise.Customer, error) {
-	client, e := NewOmiseClient()
-	if e != nil {
-		return nil, e
-	}
+	facade := utils.FacadeSingleton()
+	client := facade.Omise
 
 	//handle token was already attached
 
@@ -183,10 +165,8 @@ func (s *OmiseService) AttachCardToCustomer(customerID string, card string) (*om
 
 // RetrieveCharge retrieves a charge
 func (s *OmiseService) RetrieveCharge(chargeID string) (*omise.Charge, error) {
-	client, e := NewOmiseClient()
-	if e != nil {
-		return nil, e
-	}
+	facade := utils.FacadeSingleton()
+	client := facade.Omise
 
 	result := &omise.Charge{}
 	err := client.Do(result, &operations.RetrieveCharge{
@@ -200,10 +180,8 @@ func (s *OmiseService) RetrieveCharge(chargeID string) (*omise.Charge, error) {
 
 // GetCharges get all charges
 func (s *OmiseService) GetCharges() (*omise.ChargeList, error) {
-	client, e := NewOmiseClient()
-	if e != nil {
-		return nil, e
-	}
+	facade := utils.FacadeSingleton()
+	client := facade.Omise
 
 	result := &omise.ChargeList{}
 
@@ -217,10 +195,8 @@ func (s *OmiseService) GetCharges() (*omise.ChargeList, error) {
 
 // GetTransaction get a transaction
 func (s *OmiseService) GetTransaction(transactionID string) (*omise.Transaction, error) {
-	client, e := NewOmiseClient()
-	if e != nil {
-		return nil, e
-	}
+	facade := utils.FacadeSingleton()
+	client := facade.Omise
 
 	result := &omise.Transaction{}
 
@@ -237,10 +213,8 @@ func (s *OmiseService) GetTransaction(transactionID string) (*omise.Transaction,
 
 // GetCustomer get a customer
 func (s *OmiseService) GetCustomer(customerID string) (*omise.Customer, error) {
-	client, e := NewOmiseClient()
-	if e != nil {
-		return nil, e
-	}
+	facade := utils.FacadeSingleton()
+	client := facade.Omise
 
 	customer := &omise.Customer{}
 

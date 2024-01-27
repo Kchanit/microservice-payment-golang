@@ -208,7 +208,11 @@ func (h *OmiseHandler) HandleWebhook(c *fiber.Ctx) error {
 			fmt.Println(err)
 			return c.SendStatus(500)
 		}
-		c.JSON(user)
+		if err := c.JSON(user); err != nil {
+			// Handle the error, log it, or return an appropriate status code
+			fmt.Println("Error sending JSON response:", err)
+			return c.SendStatus(500)
+		}
 	}
 	return c.SendStatus(200)
 }

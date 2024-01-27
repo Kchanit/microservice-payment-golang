@@ -53,5 +53,8 @@ func (s *TransactionService) AddTransactionToUser(userID string, transaction dom
 	user.Transactions = append(user.Transactions, transaction)
 
 	user, err = s.userRepo.UpdateUser(userID, user)
+	if err != nil {
+		return nil, err
+	}
 	return user, nil
 }
