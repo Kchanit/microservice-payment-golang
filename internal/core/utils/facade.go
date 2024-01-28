@@ -6,18 +6,21 @@ import (
 	"os"
 	"sync"
 
+	"github.com/Kchanit/microservice-payment-golang/internal/core/utils/broker"
+	"github.com/Kchanit/microservice-payment-golang/internal/core/utils/payment"
+	"github.com/Kchanit/microservice-payment-golang/internal/core/utils/secret"
 	"github.com/omise/omise-go"
 )
 
 type UtilsFacade struct {
 	Omise *omise.Client
-	Vault *Vault
+	Vault *secret.Vault
 }
 
 var lock = &sync.Mutex{}
 var singleInstance *UtilsFacade
 
-func NewUtilsFacade(omise *omise.Client, vault *Vault) *UtilsFacade {
+func NewUtilsFacade(omise *omise.Client, vault *secret.Vault) *UtilsFacade {
 
 	return &UtilsFacade{
 		Omise: omise,
@@ -32,7 +35,7 @@ func FacadeSingleton() *UtilsFacade {
 		if singleInstance == nil {
 			fmt.Println("Creating single instance now.")
 			// Create Vault
-			vault, err := NewVault(os.Getenv("VAULT_ADDR"), os.Getenv("VAULT_TOKEN"), os.Getenv("VAULT_PATH"))
+			vault, err := secret.NewVault(os.Getenv("VAULT_ADDR"), os.Getenv("VAULT_TOKEN"), os.Getenv("VAULT_PATH"))
 
 			if err != nil {
 				log.Fatal("vault error", err)
@@ -40,7 +43,7 @@ func FacadeSingleton() *UtilsFacade {
 
 			//Create Omise
 
-			omiseClient, err := NewOmiseClient(vault.GetSecretKey("OMISE_PUBLIC_KEY"), vault.GetSecretKey("OMISE_SECRET_KEY"))
+			omiseClient, err := payment.NewOmiseClient(vault.GetSecretKey("OMISE_PUBLIC_KEY"), vault.GetSecretKey("OMISE_SECRET_KEY"))
 
 			if err != nil {
 				log.Fatal("omise error", err)
@@ -56,4 +59,15 @@ func FacadeSingleton() *UtilsFacade {
 	}
 
 	return singleInstance
+}
+
+func (u *UtilsFacade) SendKafka(topic string, content map[string]interface{}) error {
+	err := broker.KafkaProducer(topic, content)
+
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	return nil
 }
