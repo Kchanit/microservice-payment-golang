@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/Kchanit/microservice-payment-golang/internal/core/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
@@ -47,11 +48,26 @@ func NewRouter(userHandler UserHandler, omiseHandler OmiseHandler, transactionHa
 		omise.Get("/transactions/:transaction_id", omiseHandler.GetTransaction)
 	}
 
+	kafkaroute := router.Group("/kafka")
+	{
+		kafkaroute.Get("/produce", func(c *fiber.Ctx) error {
+			facade := utils.FacadeSingleton()
+			err := facade.SendKafka("test", map[string]interface{}{
+				"message": "Hello World!",
+			})
+			if err != nil {
+				return c.SendString("Error")
+			}
+
+			return c.SendString("Yo, World 👋!")
+		})
+	}
+
 	return &Router{
 		router,
 	}, nil
 }
 
 func (r *Router) Start() error {
-	return r.Listen(":8080")
+	return r.Listen(":8000")
 }
