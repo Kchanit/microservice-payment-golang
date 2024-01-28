@@ -8,7 +8,7 @@ tmp_dir = "tmp"
 [build]
 # Array of commands to run before each build
 # Just plain old shell command. You could use `make` as well.
-cmd = "go build -o ./tmp/main ."
+cmd = "go build -tags dynamic -o ./tmp/main . "
 # Array of commands to run after ^C
 # Binary file yields from `cmd`.
 bin = "tmp/main"
