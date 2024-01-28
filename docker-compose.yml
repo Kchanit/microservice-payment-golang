@@ -11,6 +11,8 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - default
     restart: unless-stopped
 
   pgadmin:
@@ -23,6 +25,8 @@ services:
       - "5050:80"
     depends_on:
       - postgres
+    networks:
+      - default
     restart: unless-stopped
 
   web:
@@ -31,22 +35,53 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "8000:8000"
     depends_on:
       - postgres
     volumes:
       - .:/app
-
-  localtunnel:
-    image: efrecon/localtunnel
-    command: lt --port 8080 --subdomain ${LOCALTUNNEL_SUBDOMAIN}
+    networks:
+      - kafka-nework
+      - default
+  zookeeper:
+    image: "bitnami/zookeeper:3.7"
+    restart: always
+    container_name: zookeeper
     environment:
-      - LOCALTUNNEL_SUBDOMAIN=${LOCALTUNNEL_SUBDOMAIN}
-    ports:
-      - "80:80"
-    depends_on:
-      - web
-    restart: unless-stopped
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+    networks:
+      - kafka-nework
+    # message broker - kafka
+    # reference: https://github.com/bitnami/bitnami-docker-kafka/blob/master/docker-compose.yml
+  kafka:
+    image: "bitnami/kafka:latest"
+    restart: always
+    container_name: kafka
+    environment:
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      ALLOW_PLAINTEXT_LISTENER: "yes"
 
+    ports:
+      - "9092:9092"
+    networks:
+      - kafka-nework
+    depends_on:
+      - zookeeper
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - 8080:8080
+    environment:
+      DYNAMIC_CONFIG_ENABLED: "true"
+      KAFKA_CLUSTERS_0_NAME: kafka
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+
+    networks:
+      - kafka-nework
+networks:
+  kafka-nework:
+    driver: bridge
+  default:
 volumes:
   postgres_data:
