@@ -71,3 +71,13 @@ func (u *UtilsFacade) SendKafka(topic string, content map[string]interface{}) er
 
 	return nil
 }
+
+func (u *UtilsFacade) ReceiverKafka(topic []string, group string) error {
+	err := broker.KafkaConsumer(topic, group)
+
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	return nil
+}
