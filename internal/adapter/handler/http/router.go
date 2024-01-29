@@ -69,5 +69,6 @@ func NewRouter(userHandler UserHandler, omiseHandler OmiseHandler, transactionHa
 }
 
 func (r *Router) Start() error {
+
 	return r.Listen(":8000")
 }

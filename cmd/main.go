@@ -29,6 +29,15 @@ func main() {
 	omiseService := services.NewOmiseService(userRepo, transactionRepo)
 	omiseHandler := handler.NewOmiseHandler(omiseService, userService, transactionService)
 
+	// Start the Kafka consumer in a separate goroutine
+	go func() {
+
+		err := facade.ReceiverKafka([]string{"test"}, "golang")
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
 	// Init router
 	router, err := handler.NewRouter(
 		*userHandler,
