@@ -10,6 +10,9 @@ vendor/
 bin/
 tmp/
 
+postgres-data/
+postgres_data/
+
 # exclude any development-specific files
 *.env
 *.log
