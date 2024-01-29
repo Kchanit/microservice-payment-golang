@@ -7,7 +7,9 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
-func KafkaConsumer(topic []string, group string) error {
+type Event func(*kafka.Message)
+
+func KafkaConsumer(topic []string, group string, action Event) error {
 
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": "kafka:9092",
@@ -27,7 +29,9 @@ func KafkaConsumer(topic []string, group string) error {
 	for run {
 		msg, err := c.ReadMessage(time.Second)
 		if err == nil {
-			fmt.Printf("Message on %s: %s\n", msg.TopicPartition, string(msg.Value))
+			action(msg)
+			// fmt.Printf("Message on %s: %s\n", msg.TopicPartition, string(msg.Value))
+			// fmt.Printf("Type of value %T\n", msg.Value)
 		} else if !err.(kafka.Error).IsTimeout() {
 			// The client will automatically try to recover from all errors.
 			// Timeout is not considered an error because it is raised by
