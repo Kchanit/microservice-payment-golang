@@ -72,8 +72,8 @@ func (u *UtilsFacade) SendKafka(topic string, content map[string]interface{}) er
 	return nil
 }
 
-func (u *UtilsFacade) ReceiverKafka(topic []string, group string) error {
-	err := broker.KafkaConsumer(topic, group)
+func (u *UtilsFacade) ReceiverKafka(topic []string, group string, action broker.Event) error {
+	err := broker.KafkaConsumer(topic, group, action)
 
 	if err != nil {
 		log.Fatal(err)
