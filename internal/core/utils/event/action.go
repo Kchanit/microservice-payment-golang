@@ -81,7 +81,7 @@ func Listen(message *kafka.Message) {
 		/* code here */
 
 		// send kafka to user_customer
-		err = facade.SendKafka("user_customer", map[string]interface{}{
+		err = facade.SendKafka("user_create_omise", map[string]interface{}{
 			"email": userjson["email"],
 			"token": customer.ID,
 		})
