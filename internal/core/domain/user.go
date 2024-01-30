@@ -11,6 +11,7 @@ type User struct {
 	CustomerToken string        `gorm:"unique " json:"customer_token"`
 	CardTokens    []CardToken   `gorm:"many2many:user_card_tokens" json:"card_tokens"`
 	Transactions  []Transaction `gorm:"foreignKey:UserID" json:"transactions"`
+	Addresses     []Address     `gorm:"foreignKey:UserID" json:"addresses"`
 	CreatedAt     time.Time     `json:"created_at"`
 	UpdatedAt     time.Time     `json:"updated_at"`
 }
