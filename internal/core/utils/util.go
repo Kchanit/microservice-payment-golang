@@ -17,7 +17,7 @@ func LoadSecret() {
 	}
 
 }
-func GenerateInvoice(customer domain.User, products []domain.Product, ref string) {
+func GenerateInvoice(customer domain.User, products []domain.Product, ref string) (string, error) {
 	doc, _ := generator.New(generator.Invoice, &generator.Options{
 		TextTypeInvoice:  "PIXELMAN",
 		AutoPrint:        true,
@@ -91,12 +91,17 @@ func GenerateInvoice(customer domain.User, products []domain.Product, ref string
 	pdf, err := doc.Build()
 	if err != nil {
 		log.Fatal(err)
+		return "", err
 	}
 
 	// Implement upload to minio
-	err = pdf.OutputFileAndClose("out.pdf")
+	outputName := "out.pdf"
+	err = pdf.OutputFileAndClose(outputName)
 
 	if err != nil {
 		log.Fatal(err)
+		return "", err
 	}
+
+	return outputName, nil
 }

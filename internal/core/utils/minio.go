@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"log"
+	"os"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -48,12 +49,12 @@ func NewConnection(config MinioConfiguration) (client *MinioClient, err error) {
 // GetMinioClient get minio client
 func GetMinioClient() (*MinioClient, error) {
 	minioConfig := MinioConfiguration{
-		Host:            "localhost:9000",
-		AccessKeyID:     "ROOTNAME",
-		SecretAccessKey: "CHANGEME123",
-		// Host:            os.Getenv("MINIO_HOST"),
-		// AccessKeyID:     os.Getenv("MINIO_ACCESS_KEY"),
-		// SecretAccessKey: os.Getenv("MINIO_SECRET_KEY"),
+		// Host:            "localhost:9000",
+		// AccessKeyID:     "ROOTNAME",
+		// SecretAccessKey: "CHANGEME123",
+		Host:            os.Getenv("MINIO_HOST"),
+		AccessKeyID:     os.Getenv("MINIO_ACCESS_KEY"),
+		SecretAccessKey: os.Getenv("MINIO_SECRET_KEY"),
 	}
 
 	minioClient, err := NewConnection(minioConfig)

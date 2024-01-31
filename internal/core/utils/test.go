@@ -8,7 +8,7 @@ import (
 	"github.com/Kchanit/microservice-payment-golang/internal/core/domain"
 )
 
-func main() {
+func test() {
 	products := []domain.Product{
 		{
 			Name:        "T-shirt",
@@ -35,9 +35,11 @@ func main() {
 		},
 	}
 	ref := "trx10281723"
-	GenerateInvoice(customer, products, ref)
+	outputName, err := GenerateInvoice(customer, products, ref)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	invoiceFilePath := "./out.pdf"
 	bucketName := "pixelmanstorage"
 	objectName := "invoices/" + ref + time.Now().Format("2006-01-02") + ".pdf"
 
@@ -48,11 +50,11 @@ func main() {
 	}
 
 	// Upload PDF file to Minio
-	err = minioClientInstance.UploadImage(bucketName, objectName, invoiceFilePath)
+	err = minioClientInstance.UploadImage(bucketName, objectName, outputName)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	os.Remove(invoiceFilePath)
+	os.Remove(outputName)
 	log.Println("PDF file uploaded successfully.")
 }
