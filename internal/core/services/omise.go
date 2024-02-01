@@ -90,9 +90,11 @@ func (s *OmiseService) ChargeBanking(amount int64, source string, userID string)
 		return nil, err
 	}
 
-	// user.Transactions = append(user.Transactions, charge.Transaction)
-
-	s.userRepo.UpdateUser(userID, user)
+	_, err = s.userRepo.UpdateUser(userID, user)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
 	return charge, nil
 }
 

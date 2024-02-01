@@ -27,7 +27,10 @@ func ConnectDb(user, pass, host, dbname, port string) {
 		log.Fatalln(err)
 	}
 
-	db.AutoMigrate(&domain.User{}, &domain.Transaction{}, &domain.CardToken{})
+	err = db.AutoMigrate(&domain.User{}, &domain.Transaction{}, &domain.CardToken{})
+	if err != nil {
+		fmt.Println("Error while migrating database", err)
+	}
 
 	DB = db
 	fmt.Println("Successfully connected!")

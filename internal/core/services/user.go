@@ -41,7 +41,7 @@ func (s *UserService) GetUserByEmail(email string) (*domain.User, error) {
 
 func (s *UserService) CreateUser(user *domain.User) (*domain.User, *omise.Customer, error) {
 	// Check if the user exists
-	existingUser, err := s.repo.GetUserByEmail(user.Email)
+	existingUser, _ := s.repo.GetUserByEmail(user.Email)
 	if existingUser != nil {
 		return nil, nil, fmt.Errorf("User with email %s already exists", user.Email)
 	}

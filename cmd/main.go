@@ -10,11 +10,10 @@ import (
 	"github.com/Kchanit/microservice-payment-golang/internal/core/services"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/utils"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/utils/event"
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	LoadSecret()
+	utils.LoadSecret()
 	facade := utils.FacadeSingleton()
 
 	repository.ConnectDb(facade.Vault.GetSecretKey("DB_USER"), facade.Vault.GetSecretKey("DB_PASSWORD"), facade.Vault.GetSecretKey("DB_HOST"), facade.Vault.GetSecretKey("DB_NAME"), facade.Vault.GetSecretKey("DB_PORT"))
@@ -52,12 +51,4 @@ func main() {
 
 	// Start server
 	log.Fatal(router.Start())
-}
-
-func LoadSecret() {
-	err := godotenv.Load("../.env")
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
-
 }

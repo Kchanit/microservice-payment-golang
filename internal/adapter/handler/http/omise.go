@@ -3,11 +3,14 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"os"
 	"strconv"
 	"time"
 
 	"github.com/Kchanit/microservice-payment-golang/internal/core/domain"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/ports"
+	"github.com/Kchanit/microservice-payment-golang/internal/core/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -193,6 +196,7 @@ func (h *OmiseHandler) HandleWebhook(c *fiber.Ctx) error {
 			UserID:   uint(userIDUint),
 			Amount:   int64(amount),
 			Currency: payload["currency"].(string),
+			Status:   payload["status"].(string),
 		}
 		fmt.Println("TransactionID: ", newTransaction.ID)
 		transaction, err := h.transactionService.CreateTransaction(newTransaction)
@@ -201,13 +205,97 @@ func (h *OmiseHandler) HandleWebhook(c *fiber.Ctx) error {
 			return c.SendStatus(500)
 		}
 
+		// Map products
+		productsInput, _ := payload["products"].([]interface{})
+		var products []domain.Product
+		for _, p := range productsInput {
+			productMap, _ := p.(map[string]interface{})
+			product := domain.Product{
+				Name:        productMap["name"].(string),
+				Description: productMap["description"].(string),
+				Price:       float64(productMap["price"].(float64)),
+				Quantity:    int(productMap["quantity"].(float64)),
+			}
+
+			products = append(products, product)
+		}
+
+		// Map customer
+		customer := domain.User{
+			Name: "John Doe",
+			Addresses: []domain.Address{
+				{
+					Address:    "89 somewhere",
+					PostalCode: "12345",
+					City:       "Phuket",
+					Country:    "Thailand",
+				},
+			},
+		}
+
+		// products := []domain.Product{
+		// 	{
+		// 		Name:        "T-shirt",
+		// 		Description: "White t-shirt, Size L",
+		// 		Price:       9300,
+		// 		Quantity:    1,
+		// 	},
+		// 	{
+		// 		Name:        "Test2",
+		// 		Description: "Temp Description",
+		// 		Price:       4800,
+		// 		Quantity:    5,
+		// 	},
+		// }
+
+		// customerInput, _ := payload["customer"].(map[string]interface{})
+		// customer := domain.User{
+		// 	Name: customerInput["name"].(string),
+		// 	Addresses: []domain.Address{
+		// 		{
+		// 			Address:    customerInput["address"].(map[string]interface{})["address"].(string),
+		// 			PostalCode: customerInput["address"].(map[string]interface{})["postal_code"].(string),
+		// 			City:       customerInput["address"].(map[string]interface{})["city"].(string),
+		// 			Country:    customerInput["address"].(map[string]interface{})["country"].(string),
+		// 		},
+		// 	},
+		// }
+
+		// Generate Invoice
+		outputName, err := utils.GenerateInvoice(customer, products, transaction.ID)
+		if err != nil {
+			fmt.Println(err)
+			return c.SendStatus(500)
+		}
+		bucketName := "pixelmanstorage"
+		objectName := "invoices/" + transaction.ID + time.Now().Format("2006-01-02") + ".pdf"
+
+		// Get Minio client instance
+		minioClientInstance, err := utils.GetMinioClient()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Upload PDF file to Minio
+		err = minioClientInstance.UploadImage(bucketName, objectName, outputName)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		os.Remove(outputName)
+		log.Println("PDF file uploaded successfully.")
+
 		// Add the transaction to the user
 		user, err := h.transactionService.AddTransactionToUser(userID, *transaction)
 		if err != nil {
 			fmt.Println(err)
 			return c.SendStatus(500)
 		}
-		c.JSON(user)
+		if err := c.JSON(user); err != nil {
+			// Handle the error, log it, or return an appropriate status code
+			fmt.Println("Error sending JSON response:", err)
+			return c.SendStatus(500)
+		}
 	}
 	return c.SendStatus(200)
 }
