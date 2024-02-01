@@ -58,7 +58,7 @@ func GetMinioClient() (*MinioClient, error) {
 
 	minioClient, err := NewConnection(minioConfig)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("minio client error", err)
 		return nil, err
 	}
 

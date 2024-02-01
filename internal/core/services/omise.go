@@ -51,11 +51,11 @@ func (s *OmiseService) ChargeCreditCard(amount int64, token string, userID strin
 		return nil, err
 	}
 	newTransaction := domain.Transaction{
-		ID:       charge.Transaction,
-		Amount:   charge.Amount,
-		Currency: charge.Currency,
-		Created:  time.Now(),
-		UserID:   uint(id),
+		TransactionID: charge.Transaction,
+		Amount:        charge.Amount,
+		Currency:      charge.Currency,
+		Created:       time.Now(),
+		UserID:        uint(id),
 	}
 
 	transaction, err := s.transactionRepo.CreateTransaction(&newTransaction)
@@ -242,13 +242,13 @@ func (h *OmiseService) processSuccessfulTransaction(userID string, amount int64,
 
 	// Create a new transaction object
 	newTransaction := &domain.Transaction{
-		ID:       payload["transaction"].(string),
-		UserID:   uint(userIDUint),
-		Amount:   int64(amount),
-		Currency: payload["currency"].(string),
-		Status:   payload["status"].(string),
+		TransactionID: payload["transaction"].(string),
+		UserID:        uint(userIDUint),
+		Amount:        int64(amount),
+		Currency:      payload["currency"].(string),
+		Status:        payload["status"].(string),
 	}
-	fmt.Println("TransactionID: ", newTransaction.ID)
+	fmt.Println("TransactionID: ", newTransaction.TransactionID)
 	transaction, err := h.transactionRepo.CreateTransaction(newTransaction)
 	if err != nil {
 		fmt.Println(err)
@@ -280,7 +280,34 @@ func (h *OmiseService) processSuccessfulTransaction(userID string, amount int64,
 			Quantity:    5,
 		},
 	}
+	// Map products
+	// productsInput, _ := payload["products"].([]interface{})
+	// var products []domain.Product
+	// for _, p := range productsInput {
+	// 	productMap, _ := p.(map[string]interface{})
+	// 	product := domain.Product{
+	// 		Name:        productMap["name"].(string),
+	// 		Description: productMap["description"].(string),
+	// 		Price:       float64(productMap["price"].(float64)),
+	// 		Quantity:    int(productMap["quantity"].(float64)),
+	// 	}
 
+	// 	products = append(products, product)
+	// }
+
+	// Map customer
+	// customerInput, _ := payload["customer"].(map[string]interface{})
+	// customer := domain.User{
+	// 	Name: customerInput["name"].(string),
+	// 	Addresses: []domain.Address{
+	// 		{
+	// 			Address:    customerInput["address"].(map[string]interface{})["address"].(string),
+	// 			PostalCode: customerInput["address"].(map[string]interface{})["postal_code"].(string),
+	// 			City:       customerInput["address"].(map[string]interface{})["city"].(string),
+	// 			Country:    customerInput["address"].(map[string]interface{})["country"].(string),
+	// 		},
+	// 	},
+	// }
 	err = h.generateAndUploadInvoice(customer, products, transaction, userID)
 	if err != nil {
 		fmt.Println(err)
@@ -321,18 +348,18 @@ func (s *OmiseService) HandleWebhook(payload map[string]interface{}) error {
 
 func (h *OmiseService) generateAndUploadInvoice(customer domain.User, products []domain.Product, transaction *domain.Transaction, userID string) error {
 	// Generate Invoice
-	outputName, err := utils.GenerateInvoice(customer, products, transaction.ID)
+	outputName, err := utils.GenerateInvoice(customer, products, transaction.TransactionID)
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
 	bucketName := "pixelmanstorage"
-	objectName := "invoices/" + transaction.ID + time.Now().Format("2006-01-02") + ".pdf"
+	objectName := "invoices/" + transaction.TransactionID + time.Now().Format("2006-01-02") + ".pdf"
 
 	// Get Minio client instance
 	minioClientInstance, err := utils.GetMinioClient()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error getting Minio client: ", err)
 		return err
 	}
 

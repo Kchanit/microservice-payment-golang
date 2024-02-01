@@ -39,7 +39,6 @@ func FacadeSingleton() *UtilsFacade {
 			}
 
 			//Create Omise
-
 			omiseClient, err := NewOmiseClient(vault.GetSecretKey("OMISE_PUBLIC_KEY"), vault.GetSecretKey("OMISE_SECRET_KEY"))
 
 			if err != nil {
