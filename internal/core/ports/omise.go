@@ -18,4 +18,5 @@ type OmiseService interface {
 	GetCharges() (*omise.ChargeList, error)
 	GetTransaction(transactionID string) (*omise.Transaction, error)
 	AddTransactionToUser(userID string, transaction domain.Transaction) error
+	HandleWebhook(payload map[string]interface{}) error
 }

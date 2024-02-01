@@ -7,6 +7,6 @@ type Invoice struct {
 	Date          time.Time `json:"date"`
 	TransactionID string    `json:"transaction_id"`
 	Amount        float64   `json:"amount"`
-	Products      []Product `json:"products"`
+	Products      []Product `gorm:"many2many:invoice_products" json:"products"`
 	UserID        uint      `json:"user_id"`
 }
