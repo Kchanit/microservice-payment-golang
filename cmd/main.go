@@ -26,7 +26,7 @@ func main() {
 	transactionService := services.NewTransactionService(transactionRepo, userRepo)
 	transactionHandler := handler.NewTransactionHandler(transactionService)
 
-	omiseService := services.NewOmiseService(userRepo, transactionRepo)
+	omiseService := services.NewOmiseService(userRepo, transactionRepo, transactionService)
 	omiseHandler := handler.NewOmiseHandler(omiseService, userService, transactionService)
 
 	// Start the Kafka consumer in a separate goroutine
