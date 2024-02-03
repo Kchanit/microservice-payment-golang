@@ -13,6 +13,7 @@ import (
 	"github.com/Kchanit/microservice-payment-golang/internal/core/utils/payment"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/utils/secret"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/utils/storage"
+	"github.com/joho/godotenv"
 	"github.com/omise/omise-go"
 )
 
@@ -111,4 +112,11 @@ func (u *UtilsFacade) GenerateInvoice(customer domain.User, products []domain.Pr
 
 	return bill, size, nil
 
+}
+
+func LoadSecret() {
+	err := godotenv.Load("../.env")
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
 }

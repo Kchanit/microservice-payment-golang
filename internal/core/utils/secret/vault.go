@@ -42,7 +42,7 @@ func (v *Vault) GetSecretKey(key string) string {
 	response, err := v.ClientVault.Read(ctx, v.Path)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("can't get secret key:", err, key, response)
 	}
 
 	data, ok := response.Data["data"].(map[string]interface{})
