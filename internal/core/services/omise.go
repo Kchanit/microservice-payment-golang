@@ -3,7 +3,6 @@ package services
 import (
 	"fmt"
 	"log"
-	"os"
 	"strconv"
 	"time"
 
@@ -321,7 +320,9 @@ func (s *OmiseService) HandleWebhook(payload map[string]interface{}) error {
 
 func (h *OmiseService) generateAndUploadInvoice(customer domain.User, products []domain.Product, transaction *domain.Transaction, userID string) error {
 	// Generate Invoice
-	outputName, err := utils.GenerateInvoice(customer, products, transaction.ID)
+	facade := utils.FacadeSingleton()
+
+	bill, size, err := facade.GenerateInvoice(customer, products, transaction.ID)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -330,20 +331,19 @@ func (h *OmiseService) generateAndUploadInvoice(customer domain.User, products [
 	objectName := "invoices/" + transaction.ID + time.Now().Format("2006-01-02") + ".pdf"
 
 	// Get Minio client instance
-	minioClientInstance, err := utils.GetMinioClient()
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
+	// minioClientInstance, err := utils.GetMinioClient()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// 	return err
+	// }
 
 	// Upload PDF file to Minio
-	err = minioClientInstance.UploadImage(bucketName, objectName, outputName)
+	err = facade.Minio.UploadFile(bucketName, objectName, bill, size, "application/pdf", "us-east-1")
 	if err != nil {
 		log.Fatal(err)
 		return err
 	}
 
-	os.Remove(outputName)
 	log.Println("PDF file uploaded successfully.")
 
 	// Add the transaction to the user
