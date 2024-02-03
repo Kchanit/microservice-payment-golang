@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"time"
+
+	"github.com/Kchanit/microservice-payment-golang/internal/core/domain"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -61,6 +64,54 @@ func NewRouter(userHandler UserHandler, omiseHandler OmiseHandler, transactionHa
 
 			return c.SendString("Yo, World 👋!")
 		})
+	}
+	billing := router.Group("/billing")
+	{
+		billing.Get("/invoice", func(c *fiber.Ctx) error {
+			products := []domain.Product{
+				{
+					Name:        "T-shirt",
+					Description: "White t-shirt, Size L",
+					Price:       9300,
+					Quantity:    1,
+				},
+				{
+					Name:        "Test2",
+					Description: "Temp Description",
+					Price:       4800,
+					Quantity:    5,
+				},
+			}
+			customer := domain.User{
+				Name: "John Doe",
+				Addresses: []domain.Address{
+					{
+						Address:    "89 somewhere",
+						PostalCode: "12345",
+						City:       "Phuket",
+						Country:    "Thailand",
+					},
+				},
+			}
+
+			ref := "trx10281723"
+			facade := utils.FacadeSingleton()
+			bill, size, err := facade.GenerateInvoice(customer, products, ref)
+			if err != nil {
+				return c.SendString("Error Generate Invoice")
+			}
+			bucketName := "pixelmanstorage"
+			objectName := "invoices/" + ref + time.Now().Format("2006-01-02") + ".pdf"
+
+			// Get Minio client instance
+			err = facade.Minio.UploadFile(bucketName, objectName, bill, size, "application/pdf", "us-east-1")
+			if err != nil {
+				return c.SendString("Error Get Minio Client")
+			}
+
+			return c.SendString("Yo, World 👋!")
+		})
+
 	}
 
 	return &Router{
