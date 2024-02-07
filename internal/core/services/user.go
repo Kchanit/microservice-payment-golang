@@ -3,8 +3,6 @@ package services
 import (
 	"fmt"
 
-	"strconv"
-
 	"github.com/Kchanit/microservice-payment-golang/internal/core/domain"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/ports"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/utils"
@@ -69,7 +67,8 @@ func (s *UserService) CreateUser(user *domain.User) (*domain.User, *omise.Custom
 		CustomerToken: customer.ID,
 	}
 
-	updatedUser, err = s.repo.UpdateUser(strconv.Itoa(int(user.ID)), updatedUser)
+	// updatedUser, err = s.repo.UpdateUser(strconv.Itoa(int(user.ID)), updatedUser)
+	updatedUser, err = s.repo.UpdateUser(user.ID, updatedUser)
 	return updatedUser, customer, err
 }
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/Kchanit/microservice-payment-golang/internal/core/domain"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/utils"
+	"github.com/Kchanit/microservice-payment-golang/internal/core/utils/broker"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
@@ -54,8 +55,8 @@ func NewRouter(userHandler UserHandler, omiseHandler OmiseHandler, transactionHa
 	kafkaroute := router.Group("/kafka")
 	{
 		kafkaroute.Get("/produce", func(c *fiber.Ctx) error {
-			facade := utils.FacadeSingleton()
-			err := facade.SendKafka("test", map[string]interface{}{
+
+			err := broker.KafkaProducer("test", "key", map[string]interface{}{
 				"message": "Hello World!",
 			})
 			if err != nil {

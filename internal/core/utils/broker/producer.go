@@ -8,7 +8,7 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
-func KafkaProducer(topic string, content map[string]interface{}) error {
+func KafkaProducer(topic string, key string, content map[string]interface{}) error {
 	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "kafka:9092"})
 	if err != nil {
 		log.Fatal(err)
@@ -45,6 +45,7 @@ func KafkaProducer(topic string, content map[string]interface{}) error {
 
 	p.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+		Key:            []byte(key),
 		Value:          value,
 	}, nil)
 

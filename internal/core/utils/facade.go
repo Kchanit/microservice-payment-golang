@@ -8,11 +8,13 @@ import (
 	"sync"
 
 	"github.com/Kchanit/microservice-payment-golang/internal/core/domain"
+
 	"github.com/Kchanit/microservice-payment-golang/internal/core/utils/billing"
-	"github.com/Kchanit/microservice-payment-golang/internal/core/utils/broker"
+
 	"github.com/Kchanit/microservice-payment-golang/internal/core/utils/payment"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/utils/secret"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/utils/storage"
+
 	"github.com/joho/godotenv"
 	"github.com/omise/omise-go"
 )
@@ -81,27 +83,6 @@ func FacadeSingleton() *UtilsFacade {
 	}
 
 	return singleInstance
-}
-
-func (u *UtilsFacade) SendKafka(topic string, content map[string]interface{}) error {
-	err := broker.KafkaProducer(topic, content)
-
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-
-	return nil
-}
-
-func (u *UtilsFacade) ReceiverKafka(topic []string, group string, action broker.Event) error {
-	err := broker.KafkaConsumer(topic, group, action)
-
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-	return nil
 }
 
 func (u *UtilsFacade) GenerateInvoice(customer domain.User, products []domain.Product, ref string) (io.Reader, int64, error) {

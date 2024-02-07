@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Kchanit/microservice-payment-golang/internal/core/services"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
-type Event func(*kafka.Message)
+type Event func(*kafka.Message, *services.UserService)
 
-func KafkaConsumer(topic []string, group string, action Event) error {
+func KafkaConsumer(topic []string, group string, action Event, userService *services.UserService) error {
 
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": "kafka:9092",
@@ -29,7 +30,7 @@ func KafkaConsumer(topic []string, group string, action Event) error {
 	for run {
 		msg, err := c.ReadMessage(time.Second)
 		if err == nil {
-			action(msg)
+			action(msg, userService)
 			// fmt.Printf("Message on %s: %s\n", msg.TopicPartition, string(msg.Value))
 			// fmt.Printf("Type of value %T\n", msg.Value)
 		} else if !err.(kafka.Error).IsTimeout() {

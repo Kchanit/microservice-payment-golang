@@ -1,7 +1,7 @@
 version: "3"
 services:
   django:
-    image: ratchaphon1412/djangoauth:prod
+    image: ratchaphon1412/pixelmanauth:prod
     container_name: django
     environment:
       - VAULT_TOKEN=${VAULT_TOKEN}

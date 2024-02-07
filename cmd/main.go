@@ -9,6 +9,7 @@ import (
 	repository "github.com/Kchanit/microservice-payment-golang/internal/adapter/repository/postgres"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/services"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/utils"
+	"github.com/Kchanit/microservice-payment-golang/internal/core/utils/broker"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/utils/event"
 )
 
@@ -32,7 +33,7 @@ func main() {
 	// Start the Kafka consumer in a separate goroutine
 	go func() {
 
-		err := facade.ReceiverKafka([]string{"user_create"}, "payment", event.Listen)
+		err := broker.KafkaConsumer([]string{"payment-service-topic"}, "payment-service", event.Listen, userService)
 		if err != nil {
 			log.Fatal(err)
 		}
