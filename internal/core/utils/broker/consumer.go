@@ -13,7 +13,7 @@ type Event func(*kafka.Message, *services.UserService)
 func KafkaConsumer(topic []string, group string, action Event, userService *services.UserService) error {
 
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers": "kafka:9092",
+		"bootstrap.servers": "119.59.99.166:9092",
 		"group.id":          group,
 		"auto.offset.reset": "earliest",
 	})

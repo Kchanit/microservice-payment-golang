@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/Kchanit/microservice-payment-golang/internal/core/ports"
@@ -28,6 +29,9 @@ type Token struct {
 	Number          string     `json:"number"`
 	ExpirationMonth time.Month `json:"expiration_month"`
 	ExpirationYear  int        `json:"expiration_year"`
+	City            string     `json:"city"`
+	PostalCode      string     `json:"postal_code"`
+	SecurityCode    string     `json:"security_code"`
 }
 
 type ChargeCreditCardInput struct {
@@ -89,7 +93,7 @@ func (h *OmiseHandler) CreateToken(c *fiber.Ctx) error {
 		return c.Status(500).SendString(err.Error())
 	}
 
-	result, err := h.omiseService.CreateToken(token.Name, token.Number, token.ExpirationMonth, token.ExpirationYear)
+	result, err := h.omiseService.CreateToken(token.Name, token.Number, token.ExpirationMonth, token.ExpirationYear, token.City, token.PostalCode, token.SecurityCode)
 	if err != nil {
 		fmt.Println(err)
 		return c.Status(500).SendString(err.Error())
@@ -177,6 +181,7 @@ func (h *OmiseHandler) GetCharges(c *fiber.Ctx) error {
 
 func (h *OmiseHandler) GetTransaction(c *fiber.Ctx) error {
 	transactionID := c.Params("transaction_id")
+	log.Println(transactionID)
 	result, err := h.omiseService.GetTransaction(transactionID)
 	if err != nil {
 		fmt.Println(err)

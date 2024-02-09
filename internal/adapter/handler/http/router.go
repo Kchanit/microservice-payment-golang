@@ -3,11 +3,15 @@ package handler
 import (
 	"time"
 
+	"log"
+
 	"github.com/Kchanit/microservice-payment-golang/internal/core/domain"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/utils"
 	"github.com/Kchanit/microservice-payment-golang/internal/core/utils/broker"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/omise/omise-go"
+	"github.com/omise/omise-go/operations"
 )
 
 type Router struct {
@@ -38,18 +42,18 @@ func NewRouter(userHandler UserHandler, omiseHandler OmiseHandler, transactionHa
 
 	router.Get("/transactions", transactionHandler.GetAllTransactions)
 
-	omise := router.Group("/omise")
+	omisePayment := router.Group("/omise")
 	{
-		omise.Post("/charge-credit-card/:userID", omiseHandler.ChargeCreditCard)
-		omise.Post("/charge-banking/:userID", omiseHandler.ChargeBanking)
-		omise.Get("/retrieve-charge/:charge_id", omiseHandler.RetrieveCharge)
-		omise.Post("/token", omiseHandler.CreateToken)
-		omise.Get("/customers", omiseHandler.ListCustomers)
-		omise.Get("/customers/:customerToken", omiseHandler.GetCustomer)
-		omise.Put("/attach-card", omiseHandler.AttachCardToCustomer)
-		omise.Post("/webhook", omiseHandler.HandleWebhook)
-		omise.Get("/charges", omiseHandler.GetCharges)
-		omise.Get("/transactions/:transaction_id", omiseHandler.GetTransaction)
+		omisePayment.Post("/charge-credit-card/:userID", omiseHandler.ChargeCreditCard)
+		omisePayment.Post("/charge-banking/:userID", omiseHandler.ChargeBanking)
+		omisePayment.Get("/retrieve-charge/:charge_id", omiseHandler.RetrieveCharge)
+		omisePayment.Post("/token", omiseHandler.CreateToken)
+		omisePayment.Get("/customers", omiseHandler.ListCustomers)
+		omisePayment.Get("/customers/:customerToken", omiseHandler.GetCustomer)
+		omisePayment.Put("/attach-card", omiseHandler.AttachCardToCustomer)
+		omisePayment.Post("/webhook", omiseHandler.HandleWebhook)
+		omisePayment.Get("/charges", omiseHandler.GetCharges)
+		omisePayment.Get("/transactions/:transaction_id", omiseHandler.GetTransaction)
 	}
 
 	kafkaroute := router.Group("/kafka")
@@ -111,6 +115,21 @@ func NewRouter(userHandler UserHandler, omiseHandler OmiseHandler, transactionHa
 			}
 
 			return c.SendString("Yo, World 👋!")
+		})
+
+	}
+
+	admin := router.Group("/admin")
+	{
+		admin.Get("/balance", func(c *fiber.Ctx) error {
+			facade := utils.FacadeSingleton()
+			result := &omise.Balance{}
+			err := facade.Omise.Do(result, &operations.RetrieveBalance{})
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			return c.JSON(result)
 		})
 
 	}

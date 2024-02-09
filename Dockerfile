@@ -21,8 +21,14 @@ RUN apk add librdkafka-dev pkgconf
 # Download dependencies
 RUN go mod download
 
+
+
 # Copy the entire project
 COPY . .
+
+
+# Copy the entire project
+RUN go mod vendor
 
 # Set the working directory to the cmd directory
 WORKDIR /app/cmd

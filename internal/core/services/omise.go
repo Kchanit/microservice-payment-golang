@@ -3,7 +3,6 @@ package services
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/Kchanit/microservice-payment-golang/internal/core/domain"
@@ -34,9 +33,10 @@ func (s *OmiseService) ChargeCreditCard(amount int64, token string, userID strin
 	client := facade.Omise
 
 	charge, createCharge := &omise.Charge{}, &operations.CreateCharge{
-		Amount:   amount,
-		Currency: "thb",
-		Card:     token,
+		Amount:    amount,
+		Currency:  "thb",
+		Card:      token,
+		ReturnURI: "http://localhost:3000/",
 	}
 
 	if e := client.Do(charge, createCharge); e != nil {
@@ -46,16 +46,17 @@ func (s *OmiseService) ChargeCreditCard(amount int64, token string, userID strin
 	if err != nil {
 		return nil, err
 	}
-	id, err := strconv.Atoi(userID)
-	if err != nil {
-		return nil, err
-	}
+	// id, err := strconv.Atoi(userID)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	newTransaction := domain.Transaction{
-		ID:       charge.Transaction,
+		ID:       charge.ID,
 		Amount:   charge.Amount,
 		Currency: charge.Currency,
 		Created:  time.Now(),
-		UserID:   uint(id),
+		UserID:   userID,
+		Status:   string(charge.Status),
 	}
 
 	transaction, err := s.transactionRepo.CreateTransaction(&newTransaction)
@@ -115,7 +116,7 @@ func (s *OmiseService) AddTransactionToUser(userID string, transaction domain.Tr
 }
 
 // CreateToken creates a token
-func (s *OmiseService) CreateToken(name string, number string, expirationMonth time.Month, expirationYear int) (*omise.Card, error) {
+func (s *OmiseService) CreateToken(name string, number string, expirationMonth time.Month, expirationYear int, city string, postalCode string, securityCode string) (*omise.Card, error) {
 	facade := utils.FacadeSingleton()
 	client := facade.Omise
 
@@ -125,6 +126,9 @@ func (s *OmiseService) CreateToken(name string, number string, expirationMonth t
 		Number:          number,
 		ExpirationMonth: expirationMonth,
 		ExpirationYear:  expirationYear,
+		City:            city,
+		PostalCode:      postalCode,
+		SecurityCode:    securityCode,
 	})
 	if err != nil {
 		return nil, err
@@ -234,16 +238,16 @@ func (s *OmiseService) GetCustomer(customerID string) (*omise.Customer, error) {
 
 func (h *OmiseService) processSuccessfulTransaction(userID string, amount int64, payload map[string]interface{}) error {
 	// Convert userID to uint
-	userIDUint, err := strconv.ParseUint(userID, 10, 32)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
+	// userIDUint, err := strconv.ParseUint(userID, 10, 32)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return err
+	// }
 
 	// Create a new transaction object
 	newTransaction := &domain.Transaction{
 		ID:       payload["transaction"].(string),
-		UserID:   uint(userIDUint),
+		UserID:   userID,
 		Amount:   int64(amount),
 		Currency: payload["currency"].(string),
 		Status:   payload["status"].(string),

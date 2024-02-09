@@ -8,5 +8,5 @@ type Transaction struct {
 	Currency string    `json:"currency"`
 	Status   string    `json:"status"`
 	Created  time.Time `json:"created"`
-	UserID   uint      `json:"user_id"`
+	UserID   string    `json:"user_id"`
 }

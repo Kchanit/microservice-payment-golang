@@ -19,7 +19,7 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 
 func (r *UserRepository) GetUserByID(id string) (*domain.User, error) {
 	user := &domain.User{}
-	if err := r.db.Preload("Transactions").First(user, id).Error; err != nil {
+	if err := r.db.Preload("Transactions").First(user, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return user, nil

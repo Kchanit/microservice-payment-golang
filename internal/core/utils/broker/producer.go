@@ -9,7 +9,7 @@ import (
 )
 
 func KafkaProducer(topic string, key string, content map[string]interface{}) error {
-	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "kafka:9092"})
+	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "119.59.99.166:9092"})
 	if err != nil {
 		log.Fatal(err)
 		return err
